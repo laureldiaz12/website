@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1576461700745.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4279641884",
+    "id" : "42742EF6",
+    "lastKnownWriteTime" : 1576461700,
+    "last_content_update" : 1576461700,
+    "path" : "~/Final Project/content/blog/2015-07-23-r-rmarkdown.Rmd",
+    "project_path" : null,
+    "properties" : {
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

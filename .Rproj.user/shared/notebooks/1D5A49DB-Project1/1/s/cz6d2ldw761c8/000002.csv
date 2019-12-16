@@ -1,0 +1,91 @@
+"0","library(fivethirtyeight)"
+"0","avengers <- avengers"
+"0","library(dplyr)"
+"2","
+Attaching package: ‘dplyr’
+
+"
+"2","The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+"
+"2","The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+"
+"0","library(tidyr)"
+"0","library(lubridate)"
+"2","
+Attaching package: ‘lubridate’
+
+"
+"2","The following object is masked from ‘package:base’:
+
+    date
+
+"
+"0","install.packages(""janitor"")"
+"2","trying URL 'https://cran.rstudio.com/bin/macosx/el-capitan/contrib/3.6/janitor_1.2.0.tgz'
+"
+"2","Content type 'application/x-gzip'"
+"2"," length 215874 bytes (210 KB)
+"
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","="
+"2","
+"
+"2","downloaded 210 KB
+
+"
+"2","
+"

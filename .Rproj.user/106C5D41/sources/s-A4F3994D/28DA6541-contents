@@ -1,0 +1,15 @@
+---
+title: "project 3"
+output: html_document
+---
+
+## R Markdown
+
+
+```{r cars}
+blogdown::install_hugo()
+blogdown::new_site(theme="nurlansu/hugo-sustain")
+blogdown::serve_site()
+
+```
+

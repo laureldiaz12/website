@@ -1,0 +1,164 @@
+---
+title: "Project 1 - Laurel Diaz"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Project 1: Analyzing Gender Representation in Marvel Comics 
+
+The two datasets I have chosen to examine are "avengers" and "comic_characters_marvel". The "avengers" dataset has 173 unique rows (characters) and 21 variables. However, after tidying my data, I chose to keep the 'name', 'appearances', 'current', 'gender', 'year', 'years_since_joining', and 'honorary' columns, since these would be the easiest to join with the "comic_characters_marvel" dataset. The "comic_characters_marvel" dataset has 16,376 unique rows (characters) and 15 variables. Since this dataset had over 16,000 unique character names, I only kept the 'name', 'appearances', and 'year' columns to join with the "avengers" dataset. I have always been a huge Marvel fan. My dad and uncle have been collecting Marvel comics since they were kids, and have shared their passion with me. I own a great majority of Marvel movies and a couple of comic books. However, the fact that there are few and far between female characters has always been glaringly obvious. Due to this fact, I expect to see a relationship between male characters and high numbers of appearances. Additionally, I expect to see low numbers of female characters in the earlier years of Marvel Comics, and an increase in recent years. 
+
+## Read in datasets: "avengers" and "comic_characters_marvel"
+
+```{R, echo=FALSE}
+library(fivethirtyeight)
+avengers <- avengers
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(janitor)
+library(readr)
+comic_characters_marvel <- 
+  "https://github.com/fivethirtyeight/data/raw/master/comic-characters/marvel-wikia-data.csv" %>% 
+  read_csv() %>% 
+  clean_names() %>% 
+  mutate(publisher = "Marvel")
+```
+
+## Recoding column and variable names using tidyr
+
+In order to start tidying my data, I had to rename and recode some of the columns and values, since majority of the columns in "comic_characters_marvel" were not in "avengers", since the former dataset is taking into account **all** of the Marvel characters over the years, and not just those in the Avengers. I first had to rename some of the column names to allow for easy joining later on. In the "avengers" dataset I renamed the 'name_alias' column to 'name' and in the "comic_characters_marvel" dataset, I renamed  and recoded the 'gender', 'alive', and 'align' columns. 
+
+```{R, echo=TRUE}
+avengers <- avengers %>% rename(name = name_alias)
+comic_characters_marvel <- comic_characters_marvel %>% rename(gender = sex)
+comic_characters_marvel <- comic_characters_marvel %>% 
+  mutate(gender = recode(gender, "Male Characters" = "MALE"))
+comic_characters_marvel <- comic_characters_marvel %>% 
+  mutate(gender = recode(gender, "Female Characters" = "FEMALE"))
+comic_characters_marvel <- comic_characters_marvel %>% 
+  rename(status = alive)
+comic_characters_marvel <- comic_characters_marvel %>% 
+  mutate(status = recode(status, "Living Characters" = "ALIVE"))
+comic_characters_marvel <- comic_characters_marvel %>% 
+  mutate(status = recode(status, "Deceased Characters" = "DECEASED"))
+comic_characters_marvel <- comic_characters_marvel %>% 
+  mutate(align = recode(align, "Good Characters" = "GOOD"))
+comic_characters_marvel <- comic_characters_marvel %>% 
+  mutate(align = recode(align, "Bad Characters" = "BAD"))
+comic_characters_marvel <- comic_characters_marvel %>% 
+  mutate(align = recode(align, "Neutral Characters" = "NEUTRAL"))
+```
+
+## Delete excess columns before joining!
+
+Right before joining, I deleted some of the excess colummns between the datasets that I either wouldn't be needing/using in my analysis, or would inhibit me from joining the two. 
+
+```{R, echo=TRUE}
+avengers <- avengers %>% select(-probationary_intro, -notes, -death1, -death2, -death3, -death4, -death5, -return1, -return2, -return3, -return4, -return5, -full_reserve_avengers_intro, -url)
+comic_characters_marvel <- comic_characters_marvel %>% select(-publisher, -gsm, -page_id, -urlslug, -id)
+```
+
+## Time to join!
+
+I used a left_join in order to take all of the values from the "comic_characters_marvel" dataset and find matches in "avengers". I chose to use this join since "avengers" only had 7 columns, while "comic_characters_marvel" had 9 columns and over 16,000 unique characters. By doing this, the data joined by the columns they had in common: name, appearances, gender, and year. Once the datasets were joined together, there was a total of 7 variables and 173 unique observations (e.g., only the Marvel characters that are also in the Avengers were kept). 
+
+``` {R, echo=TRUE}
+full_data <- avengers %>% left_join(comic_characters_marvel)
+full_data <- remove_empty_cols(full_data)
+full_data <- full_data %>% mutate(gender=replace(gender, name == 'Susan Richards (nee Storm)', "FEMALE"))
+```
+
+## Using dplyr functions to generate summary statistics
+
+In order to confirm my original hypotheses regarding this data, I used dplyr functions to filter by gender, select names and number of appearances, group_by names in order of descending number of appearances, and create a column for number of appearances since the year the character joined the Avengers. Through filtering, I was able to confirm my hypothesis that the number of male characters in the Avengers was much larger than the number of female characters (approximately 2:1). However, I must admit that I was expecting this ratio to much larger in favor of the male characters, so it was a pleasant surprise to see a 2:1 ratio.  After selecting for name, gender, and number of appearances, I found that in the top 10 characters with the most appearances, only one female character appears (Susan Storm) and she is in "last place". I then wanted to determine what percentage of male and female characters have "Full" Avengers status in relation to their totals. The percentage of female characters given full Avengers status was 76% while the percentage for male characters was 82%. Again, I was surprised by the closeness in percentages between male and female characters, but it still needs to be reiterated that we are working with a smaller proportion of female characters to begin with. 
+
+```{R}
+full_data %>% filter(gender == "FEMALE") %>%
+  count()
+full_data %>% filter(gender == "MALE") %>%
+  count()
+full_data %>% select(name, gender, appearances) %>%
+  top_n(10) %>%
+  arrange(desc(appearances))
+full_data %>% filter(gender == "FEMALE") %>%
+  filter(honorary == "Full") %>%
+  count()
+full_data %>% filter(gender == "MALE") %>%
+  filter(honorary == "Full") %>%
+  count()
+full_data <- full_data %>% mutate(appearances_since_yr = appearances/years_since_joining)
+```
+
+##Creating summary statistics
+
+After getting a closer look at the relationships between the variables in my data, the next step was to look at more specific statistics. First, I grouped by gender to find the mean number of appearances. Then, I filtered by both female and male characters who are currently a part of the Avengers team, and found the mean number of appearances with these parameters. Finally, I wanted to see the top 6 female characters with the most number of appearances. While it can be seen that the top 2 characters do not have current status on the Avengers team, they do in fact have full status in The Fantastic Four and X-Men teams respectively. I created a new variable (the number of appearances since joining the Avengers).  After finding the mean values for appearances by gender, I wanted to find the standard deviations, minimums and maximums. In the year 1998, the maximum number of appearances for female characters was actually larger than that of male characters (330 and 302). However, it should be noted that there were only two observations for male and female characters in 1998, Vance Astrovik and Angelica Jones. I next used the year 2010, where I expected there to be an increase in female characters, however, the maximum number of female character appearances was approximately 2/3rds that of the male characters. Finally, I wanted to find the minimum number of appearances for each gender. My hypothesis that the minimum number of appearances for male characters would still be larger than the female characters. By using the same year, I was again surprised at the results: the minimum number of female appearances was 63 while the minimum number of male appearances was 6, disproving my hypothesis. Finally, I used the 'appearances_since_yr' variable to see if either male or female characters had a higher value for number of appearances since joining the Avengers.
+
+```{R, echo=TRUE}
+full_data %>% group_by(gender) %>%
+  summarize(mean(appearances))
+full_data %>% filter(gender == "FEMALE", current == "TRUE") %>%
+  summarize(mean(appearances))
+full_data %>% filter(gender == "MALE", current == "TRUE") %>% 
+  summarize(mean(appearances))
+full_data %>% group_by(name) %>%
+  filter(gender == "FEMALE") %>%
+  summarize(max(appearances_since_yr)) %>%
+  top_n(10)
+full_data %>% group_by(gender) %>%
+  summarize(sd(appearances))
+full_data %>% group_by(gender) %>%
+  filter(year == "1998") %>%
+  summarize(max(appearances))
+full_data %>% group_by(name) %>%
+  filter(year == "1998")
+full_data %>% group_by(gender) %>%
+  filter(year == "2010") %>%
+  summarize(max(appearances))
+full_data %>% group_by(gender) %>%
+  filter(year == "2010") %>%
+  summarize(min(appearances))
+full_data %>% group_by(gender) %>%
+  summarize(mean(appearances_since_yr))
+```
+
+## Create data visualizations
+
+Plot 1: This plot shows the relationships between number of appearances, gender, and Avengers team status. It should be noted that "Academy" status means the character is in the Academy/training. I decided to use a grouped barplot in order to show the differences between the male and female characters. As expected, more male characters have "Full" Avengers status than female, and the same can be said for "Honorary" status. Additionally, only male characters have been given "Probationary" Avengers status. The only time female characters have a higher number of appearances than male characters, is if they have "Academy" status, which is only taking into account the average of 9 characters.  Plot 2: This plot shows the relationships between the number of appearances by gender, in the years since joining the Avengers. Majority of the data on this scatterplot lies within the 0 to 2,000 appearances range. There are also 3 outliers within this data for character appearances almost 120 years since joining the Avengers and for over 3,000 appearances. I wanted to use this plot in order to show that at roughly the same number of years since joining the Avengers, male characters have more numbers of appearaces than female characters.  Plot 3: This last plot shows the relationship between the number of appearances by gender and the year they were introduced. I wanted to use this plot in order to show that majority of female characters weren't introduced until later years. Additionally, this plot shows us that the average number of appearances for female characters doesn't go above 2,000, even in more recent years. 
+
+
+```{R, echo=TRUE}
+library(ggplot2)
+ggplot(full_data, aes(x=honorary, y=appearances, fill=gender)) + geom_bar(stat="summary", fun.data = "mean_se", position = "dodge") + geom_errorbar(stat = "summary", fun.data= "mean_se", position = position_dodge(0.9), width=0.3) + labs(title = "Appearances by Status and Gender", x = "Status", y = "Appearances") + scale_y_continuous(breaks = c(0, 200, 400, 600, 800)) + scale_fill_brewer(palette = "Pastel2")
+full_data %>% filter(honorary == "Academy", gender == "FEMALE") %>%
+  count()
+
+ggplot(full_data, aes(x=years_since_joining, y=appearances, color=gender, shape = gender)) +
+  geom_point(stat="summary", fun.y="mean", size=2) +labs(x="Years Since Joining the Avengers", y="Appearances", title = "Appearances Since Joining the Avengers by Gender")
+
+ggplot(full_data, aes(x=year, y=appearances, color=gender, shape = gender)) + geom_point() +
+  geom_point(stat="summary", fun.y="mean", size=2) + labs(x="Year", y="Appearances", title = "Appearances per Year per Gender")
+```
+
+## k-means Clustering
+
+I used k-means clustering in order to put my data into 3 clusters and discover each cluster's centroid. This data was organized by number of appearances, years since joining the Avengers, and the year the characters was introduced into Marvel. I clustered these three variables using the select function. I then used the kmeans function to specify the three clusters that I wanted my data to fit in. I then used the cluster function and ggplot in order to visualize my data and each cluster group.
+```{R}
+library(cluster)
+library(ggplot2)
+clust_dat <- full_data %>% dplyr::select(years_since_joining,appearances,year)
+kmeans1<-clust_dat%>%kmeans(3)
+kmeans1
+kmeansclust<-clust_dat%>%mutate(cluster=as.factor(kmeans1$cluster))
+kmeansclust%>%ggplot(aes(years_since_joining,appearances,color=year))+geom_point()
+kmeansclust%>%mutate(year=full_data$year)%>%
+  ggplot(aes(years_since_joining, appearances, color=year, shape=cluster))+geom_point(size=4)+ggtitle("kmeans")
+```   
+
+
+

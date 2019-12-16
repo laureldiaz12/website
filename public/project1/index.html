@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Laurel Diaz" />
+    <meta name="description" content="Computational Biology Final Project">
+    <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
+    <title>Project 1 - Laurel Diaz</title>
+    <meta name="generator" content="Hugo 0.61.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="/blog/">BLOG</a></li>
+        
+        <li><a href="/projects/">PROJECTS</a></li>
+        
+        <li><a href="Resume.docx">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="/project1/">Project 1 - Laurel Diaz</a></strong>
+          </h3>
+        </div>
+        <div class="blog-title">
+          <h4>
+          January 1, 0001
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="project-1-analyzing-gender-representation-in-marvel-comics" class="section level1">
+<h1>Project 1: Analyzing Gender Representation in Marvel Comics</h1>
+<p>The two datasets I have chosen to examine are “avengers” and “comic_characters_marvel”. The “avengers” dataset has 173 unique rows (characters) and 21 variables. However, after tidying my data, I chose to keep the ‘name’, ‘appearances’, ‘current’, ‘gender’, ‘year’, ‘years_since_joining’, and ‘honorary’ columns, since these would be the easiest to join with the “comic_characters_marvel” dataset. The “comic_characters_marvel” dataset has 16,376 unique rows (characters) and 15 variables. Since this dataset had over 16,000 unique character names, I only kept the ‘name’, ‘appearances’, and ‘year’ columns to join with the “avengers” dataset. I have always been a huge Marvel fan. My dad and uncle have been collecting Marvel comics since they were kids, and have shared their passion with me. I own a great majority of Marvel movies and a couple of comic books. However, the fact that there are few and far between female characters has always been glaringly obvious. Due to this fact, I expect to see a relationship between male characters and high numbers of appearances. Additionally, I expect to see low numbers of female characters in the earlier years of Marvel Comics, and an increase in recent years.</p>
+<div id="read-in-datasets-avengers-and-comic_characters_marvel" class="section level2">
+<h2>Read in datasets: “avengers” and “comic_characters_marvel”</h2>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre><code>## 
+## Attaching package: &#39;lubridate&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:base&#39;:
+## 
+##     date</code></pre>
+<pre><code>## 
+## Attaching package: &#39;janitor&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     chisq.test, fisher.test</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   page_id = col_double(),
+##   name = col_character(),
+##   urlslug = col_character(),
+##   ID = col_character(),
+##   ALIGN = col_character(),
+##   EYE = col_character(),
+##   HAIR = col_character(),
+##   SEX = col_character(),
+##   GSM = col_character(),
+##   ALIVE = col_character(),
+##   APPEARANCES = col_double(),
+##   `FIRST APPEARANCE` = col_character(),
+##   Year = col_double()
+## )</code></pre>
+</div>
+<div id="recoding-column-and-variable-names-using-tidyr" class="section level2">
+<h2>Recoding column and variable names using tidyr</h2>
+<p>In order to start tidying my data, I had to rename and recode some of the columns and values, since majority of the columns in “comic_characters_marvel” were not in “avengers”, since the former dataset is taking into account <strong>all</strong> of the Marvel characters over the years, and not just those in the Avengers. I first had to rename some of the column names to allow for easy joining later on. In the “avengers” dataset I renamed the ‘name_alias’ column to ‘name’ and in the “comic_characters_marvel” dataset, I renamed and recoded the ‘gender’, ‘alive’, and ‘align’ columns.</p>
+<pre class="r"><code>avengers &lt;- avengers %&gt;% rename(name = name_alias)
+comic_characters_marvel &lt;- comic_characters_marvel %&gt;% rename(gender = sex)
+comic_characters_marvel &lt;- comic_characters_marvel %&gt;% 
+  mutate(gender = recode(gender, &quot;Male Characters&quot; = &quot;MALE&quot;))
+comic_characters_marvel &lt;- comic_characters_marvel %&gt;% 
+  mutate(gender = recode(gender, &quot;Female Characters&quot; = &quot;FEMALE&quot;))
+comic_characters_marvel &lt;- comic_characters_marvel %&gt;% 
+  rename(status = alive)
+comic_characters_marvel &lt;- comic_characters_marvel %&gt;% 
+  mutate(status = recode(status, &quot;Living Characters&quot; = &quot;ALIVE&quot;))
+comic_characters_marvel &lt;- comic_characters_marvel %&gt;% 
+  mutate(status = recode(status, &quot;Deceased Characters&quot; = &quot;DECEASED&quot;))
+comic_characters_marvel &lt;- comic_characters_marvel %&gt;% 
+  mutate(align = recode(align, &quot;Good Characters&quot; = &quot;GOOD&quot;))
+comic_characters_marvel &lt;- comic_characters_marvel %&gt;% 
+  mutate(align = recode(align, &quot;Bad Characters&quot; = &quot;BAD&quot;))
+comic_characters_marvel &lt;- comic_characters_marvel %&gt;% 
+  mutate(align = recode(align, &quot;Neutral Characters&quot; = &quot;NEUTRAL&quot;))</code></pre>
+</div>
+<div id="delete-excess-columns-before-joining" class="section level2">
+<h2>Delete excess columns before joining!</h2>
+<p>Right before joining, I deleted some of the excess colummns between the datasets that I either wouldn’t be needing/using in my analysis, or would inhibit me from joining the two.</p>
+<pre class="r"><code>avengers &lt;- avengers %&gt;% select(-probationary_intro, -notes, -death1, -death2, -death3, -death4, -death5, -return1, -return2, -return3, -return4, -return5, -full_reserve_avengers_intro, -url)
+comic_characters_marvel &lt;- comic_characters_marvel %&gt;% select(-publisher, -gsm, -page_id, -urlslug, -id)</code></pre>
+</div>
+<div id="time-to-join" class="section level2">
+<h2>Time to join!</h2>
+<p>I used a left_join in order to take all of the values from the “comic_characters_marvel” dataset and find matches in “avengers”. I chose to use this join since “avengers” only had 7 columns, while “comic_characters_marvel” had 9 columns and over 16,000 unique characters. By doing this, the data joined by the columns they had in common: name, appearances, gender, and year. Once the datasets were joined together, there was a total of 7 variables and 173 unique observations (e.g., only the Marvel characters that are also in the Avengers were kept).</p>
+<pre class="r"><code>full_data &lt;- avengers %&gt;% left_join(comic_characters_marvel)</code></pre>
+<pre><code>## Joining, by = c(&quot;name&quot;, &quot;appearances&quot;, &quot;gender&quot;, &quot;year&quot;)</code></pre>
+<pre class="r"><code>full_data &lt;- remove_empty_cols(full_data)</code></pre>
+<pre><code>## Warning: &#39;remove_empty_cols&#39; is deprecated.
+## Use &#39;remove_empty(&quot;cols&quot;)&#39; instead.
+## See help(&quot;Deprecated&quot;)</code></pre>
+<pre class="r"><code>full_data &lt;- full_data %&gt;% mutate(gender=replace(gender, name == &#39;Susan Richards (nee Storm)&#39;, &quot;FEMALE&quot;))</code></pre>
+</div>
+<div id="using-dplyr-functions-to-generate-summary-statistics" class="section level2">
+<h2>Using dplyr functions to generate summary statistics</h2>
+<p>In order to confirm my original hypotheses regarding this data, I used dplyr functions to filter by gender, select names and number of appearances, group_by names in order of descending number of appearances, and create a column for number of appearances since the year the character joined the Avengers. Through filtering, I was able to confirm my hypothesis that the number of male characters in the Avengers was much larger than the number of female characters (approximately 2:1). However, I must admit that I was expecting this ratio to much larger in favor of the male characters, so it was a pleasant surprise to see a 2:1 ratio. After selecting for name, gender, and number of appearances, I found that in the top 10 characters with the most appearances, only one female character appears (Susan Storm) and she is in “last place”. I then wanted to determine what percentage of male and female characters have “Full” Avengers status in relation to their totals. The percentage of female characters given full Avengers status was 76% while the percentage for male characters was 82%. Again, I was surprised by the closeness in percentages between male and female characters, but it still needs to be reiterated that we are working with a smaller proportion of female characters to begin with.</p>
+<pre class="r"><code>full_data %&gt;% filter(gender == &quot;FEMALE&quot;) %&gt;%
+  count()</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##       n
+##   &lt;int&gt;
+## 1    59</code></pre>
+<pre class="r"><code>full_data %&gt;% filter(gender == &quot;MALE&quot;) %&gt;%
+  count()</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##       n
+##   &lt;int&gt;
+## 1   114</code></pre>
+<pre class="r"><code>full_data %&gt;% select(name, gender, appearances) %&gt;%
+  top_n(10) %&gt;%
+  arrange(desc(appearances))</code></pre>
+<pre><code>## Selecting by appearances</code></pre>
+<pre><code>## # A tibble: 10 x 3
+##    name                            gender appearances
+##    &lt;chr&gt;                           &lt;chr&gt;        &lt;dbl&gt;
+##  1 Peter Benjamin Parker           MALE          4333
+##  2 Steven Rogers                   MALE          3458
+##  3 &quot;James \&quot;Logan\&quot; Howlett&quot;       MALE          3130
+##  4 &quot;Anthony Edward \&quot;Tony\&quot; Stark&quot; MALE          3068
+##  5 Thor Odinson                    MALE          2402
+##  6 Benjamin Jacob Grimm            MALE          2305
+##  7 Reed Richards                   MALE          2125
+##  8 Robert Bruce Banner             MALE          2089
+##  9 Henry P. McCoy                  MALE          1886
+## 10 Susan Richards (nee Storm)      FEMALE        1761</code></pre>
+<pre class="r"><code>full_data %&gt;% filter(gender == &quot;FEMALE&quot;) %&gt;%
+  filter(honorary == &quot;Full&quot;) %&gt;%
+  count()</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##       n
+##   &lt;int&gt;
+## 1    44</code></pre>
+<pre class="r"><code>full_data %&gt;% filter(gender == &quot;MALE&quot;) %&gt;%
+  filter(honorary == &quot;Full&quot;) %&gt;%
+  count()</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##       n
+##   &lt;int&gt;
+## 1    94</code></pre>
+<pre class="r"><code>full_data &lt;- full_data %&gt;% mutate(appearances_since_yr = appearances/years_since_joining)</code></pre>
+<p>##Creating summary statistics</p>
+<p>After getting a closer look at the relationships between the variables in my data, the next step was to look at more specific statistics. First, I grouped by gender to find the mean number of appearances. Then, I filtered by both female and male characters who are currently a part of the Avengers team, and found the mean number of appearances with these parameters. Finally, I wanted to see the top 6 female characters with the most number of appearances. While it can be seen that the top 2 characters do not have current status on the Avengers team, they do in fact have full status in The Fantastic Four and X-Men teams respectively. I created a new variable (the number of appearances since joining the Avengers). After finding the mean values for appearances by gender, I wanted to find the standard deviations, minimums and maximums. In the year 1998, the maximum number of appearances for female characters was actually larger than that of male characters (330 and 302). However, it should be noted that there were only two observations for male and female characters in 1998, Vance Astrovik and Angelica Jones. I next used the year 2010, where I expected there to be an increase in female characters, however, the maximum number of female character appearances was approximately 2/3rds that of the male characters. Finally, I wanted to find the minimum number of appearances for each gender. My hypothesis that the minimum number of appearances for male characters would still be larger than the female characters. By using the same year, I was again surprised at the results: the minimum number of female appearances was 63 while the minimum number of male appearances was 6, disproving my hypothesis. Finally, I used the ‘appearances_since_yr’ variable to see if either male or female characters had a higher value for number of appearances since joining the Avengers.</p>
+<pre class="r"><code>full_data %&gt;% group_by(gender) %&gt;%
+  summarize(mean(appearances))</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   gender `mean(appearances)`
+##   &lt;chr&gt;                &lt;dbl&gt;
+## 1 FEMALE                289.
+## 2 MALE                  479.</code></pre>
+<pre class="r"><code>full_data %&gt;% filter(gender == &quot;FEMALE&quot;, current == &quot;TRUE&quot;) %&gt;%
+  summarize(mean(appearances))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   `mean(appearances)`
+##                 &lt;dbl&gt;
+## 1                315.</code></pre>
+<pre class="r"><code>full_data %&gt;% filter(gender == &quot;MALE&quot;, current == &quot;TRUE&quot;) %&gt;% 
+  summarize(mean(appearances))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   `mean(appearances)`
+##                 &lt;dbl&gt;
+## 1                633.</code></pre>
+<pre class="r"><code>full_data %&gt;% group_by(name) %&gt;%
+  filter(gender == &quot;FEMALE&quot;) %&gt;%
+  summarize(max(appearances_since_yr)) %&gt;%
+  top_n(10)</code></pre>
+<pre><code>## Selecting by max(appearances_since_yr)</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##    name                       `max(appearances_since_yr)`
+##    &lt;chr&gt;                                            &lt;dbl&gt;
+##  1 Anna Marie                                       438. 
+##  2 Ava Ayala                                         49  
+##  3 Brunnhilde                                        73.8
+##  4 Jennifer Walters                                  28.3
+##  5 Jessica Jones                                     41  
+##  6 Jessica Miriam Drew                               75  
+##  7 Maria Hill                                        71.8
+##  8 Ororo Munroe                                     533. 
+##  9 Sharon Carter                                     66.6
+## 10 Susan Richards (nee Storm)                        67.7</code></pre>
+<pre class="r"><code>full_data %&gt;% group_by(gender) %&gt;%
+  summarize(sd(appearances))</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   gender `sd(appearances)`
+##   &lt;chr&gt;              &lt;dbl&gt;
+## 1 FEMALE              405.
+## 2 MALE                776.</code></pre>
+<pre class="r"><code>full_data %&gt;% group_by(gender) %&gt;%
+  filter(year == &quot;1998&quot;) %&gt;%
+  summarize(max(appearances))</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   gender `max(appearances)`
+##   &lt;chr&gt;               &lt;dbl&gt;
+## 1 FEMALE                330
+## 2 MALE                  302</code></pre>
+<pre class="r"><code>full_data %&gt;% group_by(name) %&gt;%
+  filter(year == &quot;1998&quot;)</code></pre>
+<pre><code>## # A tibble: 2 x 8
+## # Groups:   name [2]
+##   name  appearances current gender  year years_since_joi… honorary
+##   &lt;chr&gt;       &lt;dbl&gt; &lt;lgl&gt;   &lt;chr&gt;  &lt;dbl&gt;            &lt;int&gt; &lt;chr&gt;   
+## 1 Vanc…         302 FALSE   MALE    1998               17 Full    
+## 2 Ange…         330 FALSE   FEMALE  1998               17 Full    
+## # … with 1 more variable: appearances_since_yr &lt;dbl&gt;</code></pre>
+<pre class="r"><code>full_data %&gt;% group_by(gender) %&gt;%
+  filter(year == &quot;2010&quot;) %&gt;%
+  summarize(max(appearances))</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   gender `max(appearances)`
+##   &lt;chr&gt;               &lt;dbl&gt;
+## 1 FEMALE                369
+## 2 MALE                  545</code></pre>
+<pre class="r"><code>full_data %&gt;% group_by(gender) %&gt;%
+  filter(year == &quot;2010&quot;) %&gt;%
+  summarize(min(appearances))</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   gender `min(appearances)`
+##   &lt;chr&gt;               &lt;dbl&gt;
+## 1 FEMALE                 63
+## 2 MALE                    6</code></pre>
+<pre class="r"><code>full_data %&gt;% group_by(gender) %&gt;%
+  summarize(mean(appearances_since_yr))</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   gender `mean(appearances_since_yr)`
+##   &lt;chr&gt;                         &lt;dbl&gt;
+## 1 FEMALE                         31.7
+## 2 MALE                          Inf</code></pre>
+</div>
+<div id="create-data-visualizations" class="section level2">
+<h2>Create data visualizations</h2>
+<p>Plot 1: This plot shows the relationships between number of appearances, gender, and Avengers team status. It should be noted that “Academy” status means the character is in the Academy/training. I decided to use a grouped barplot in order to show the differences between the male and female characters. As expected, more male characters have “Full” Avengers status than female, and the same can be said for “Honorary” status. Additionally, only male characters have been given “Probationary” Avengers status. The only time female characters have a higher number of appearances than male characters, is if they have “Academy” status, which is only taking into account the average of 9 characters. Plot 2: This plot shows the relationships between the number of appearances by gender, in the years since joining the Avengers. Majority of the data on this scatterplot lies within the 0 to 2,000 appearances range. There are also 3 outliers within this data for character appearances almost 120 years since joining the Avengers and for over 3,000 appearances. I wanted to use this plot in order to show that at roughly the same number of years since joining the Avengers, male characters have more numbers of appearaces than female characters. Plot 3: This last plot shows the relationship between the number of appearances by gender and the year they were introduced. I wanted to use this plot in order to show that majority of female characters weren’t introduced until later years. Additionally, this plot shows us that the average number of appearances for female characters doesn’t go above 2,000, even in more recent years.</p>
+<pre class="r"><code>library(ggplot2)
+ggplot(full_data, aes(x=honorary, y=appearances, fill=gender)) + geom_bar(stat=&quot;summary&quot;, fun.data = &quot;mean_se&quot;, position = &quot;dodge&quot;) + geom_errorbar(stat = &quot;summary&quot;, fun.data= &quot;mean_se&quot;, position = position_dodge(0.9), width=0.3) + labs(title = &quot;Appearances by Status and Gender&quot;, x = &quot;Status&quot;, y = &quot;Appearances&quot;) + scale_y_continuous(breaks = c(0, 200, 400, 600, 800)) + scale_fill_brewer(palette = &quot;Pastel2&quot;)</code></pre>
+<p><img src="/Project1_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>full_data %&gt;% filter(honorary == &quot;Academy&quot;, gender == &quot;FEMALE&quot;) %&gt;%
+  count()</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##       n
+##   &lt;int&gt;
+## 1     9</code></pre>
+<pre class="r"><code>ggplot(full_data, aes(x=years_since_joining, y=appearances, color=gender, shape = gender)) +
+  geom_point(stat=&quot;summary&quot;, fun.y=&quot;mean&quot;, size=2) +labs(x=&quot;Years Since Joining the Avengers&quot;, y=&quot;Appearances&quot;, title = &quot;Appearances Since Joining the Avengers by Gender&quot;)</code></pre>
+<p><img src="/Project1_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
+<pre class="r"><code>ggplot(full_data, aes(x=year, y=appearances, color=gender, shape = gender)) + geom_point() +
+  geom_point(stat=&quot;summary&quot;, fun.y=&quot;mean&quot;, size=2) + labs(x=&quot;Year&quot;, y=&quot;Appearances&quot;, title = &quot;Appearances per Year per Gender&quot;)</code></pre>
+<p><img src="/Project1_files/figure-html/unnamed-chunk-7-3.png" width="672" /></p>
+</div>
+<div id="k-means-clustering" class="section level2">
+<h2>k-means Clustering</h2>
+<p>I used k-means clustering in order to put my data into 3 clusters and discover each cluster’s centroid. This data was organized by number of appearances, years since joining the Avengers, and the year the characters was introduced into Marvel. I clustered these three variables using the select function. I then used the kmeans function to specify the three clusters that I wanted my data to fit in. I then used the cluster function and ggplot in order to visualize my data and each cluster group.</p>
+<pre class="r"><code>library(cluster)
+library(ggplot2)
+clust_dat &lt;- full_data %&gt;% dplyr::select(years_since_joining,appearances,year)
+kmeans1&lt;-clust_dat%&gt;%kmeans(3)
+kmeans1</code></pre>
+<pre><code>## K-means clustering with 3 clusters of sizes 130, 34, 9
+## 
+## Cluster means:
+##   years_since_joining appearances     year
+## 1            26.00000    126.7385 1989.000
+## 2            25.82353    892.9118 1989.176
+## 3            37.33333   2755.1111 1977.667
+## 
+## Clustering vector:
+##   [1] 2 2 3 3 3 2 3 2 2 2 1 2 2 2 1 2 1 3 1 2 1 1 2 1 1 1 1 1 1 1 2 2 1 1 2
+##  [36] 1 1 2 1 1 3 1 1 1 2 1 1 1 1 2 1 1 1 1 1 1 1 3 2 1 1 1 1 1 1 1 1 1 1 1
+##  [71] 2 1 1 3 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 2 1 3 1 1 1 1 1 1 1 1 1 1 2 2
+## [106] 1 2 2 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+## [141] 2 2 2 2 2 2 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+## 
+## Within cluster sum of squares by cluster:
+## [1] 2019131 4357511 5149477
+##  (between_SS / total_SS =  85.5 %)
+## 
+## Available components:
+## 
+## [1] &quot;cluster&quot;      &quot;centers&quot;      &quot;totss&quot;        &quot;withinss&quot;    
+## [5] &quot;tot.withinss&quot; &quot;betweenss&quot;    &quot;size&quot;         &quot;iter&quot;        
+## [9] &quot;ifault&quot;</code></pre>
+<pre class="r"><code>kmeansclust&lt;-clust_dat%&gt;%mutate(cluster=as.factor(kmeans1$cluster))
+kmeansclust%&gt;%ggplot(aes(years_since_joining,appearances,color=year))+geom_point()</code></pre>
+<p><img src="/Project1_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<pre class="r"><code>kmeansclust%&gt;%mutate(year=full_data$year)%&gt;%
+  ggplot(aes(years_since_joining, appearances, color=year, shape=cluster))+geom_point(size=4)+ggtitle(&quot;kmeans&quot;)</code></pre>
+<p><img src="/Project1_files/figure-html/unnamed-chunk-8-2.png" width="672" /></p>
+</div>
+</div>
+
+              <hr>
+              <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div>
+            </div>
+          </div>
+          <hr>
+        <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+        </div>
+      </div>
+      
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="/js/docs.min.js"></script>
+<script src="/js/main.js"></script>
+
+<script src="/js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

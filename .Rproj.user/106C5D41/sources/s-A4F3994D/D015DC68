@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1576468221540.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D015DC68",
+    "lastKnownWriteTime" : 1576516896,
+    "last_content_update" : 1576516896625,
+    "path" : "~/Desktop/Final Project/content/blog/2019-12-15-python-how-to.Rmd",
+    "project_path" : "content/blog/2019-12-15-python-how-to.Rmd",
+    "properties" : {
+        "cursorPosition" : "19,0",
+        "last_setup_crc32" : "A4F3994D82d8cf48",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

@@ -1,0 +1,698 @@
+---
+title: "Project 2 - Laurel Diaz (lcd738)"
+output: html_document
+---
+
+
+
+<div id="candy-rankings-dataset" class="section level2">
+<h2>Candy Rankings Dataset</h2>
+<p>This project uses the “candy_rankings” dataset in the package “fivethirtyeight” to understand statistical relationships between types of candy, sugar percentile, price percentile, pluribus (one of many candies in a box) and overall “win” percentage. As an emphatic lover of candy, I thought it would be incredibly interesting to see which candy types had the highest and lowest sugar percentages, which had the higher price percentages, and which were the overall winners. This project will use the categorical variable of “competitorname” (candy brand name), the binary variables of candy type (i.e., does it have chocolate?: 1=yes, 0=no, is it fruity?: 1=yes, 0=no, etc) and pluribus (1=yes, 0=no), and the numerical variables of sugar percentile, price percentile, and overall win percentage.</p>
+<div id="part-1-manova-and-anova" class="section level3">
+<h3>Part 1: MANOVA and ANOVA</h3>
+<pre class="r"><code>library(fivethirtyeight)
+candy &lt;- candy_rankings
+man &lt;- manova(cbind(sugarpercent, pricepercent, winpercent) ~chocolate, data=candy)
+summary(man)</code></pre>
+<pre><code>##           Df  Pillai approx F num Df den Df    Pr(&gt;F)    
+## chocolate  1 0.51448   28.611      3     81 1.028e-12 ***
+## Residuals 83                                             
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary.aov(man)</code></pre>
+<pre><code>##  Response sugarpercent :
+##             Df Sum Sq  Mean Sq F value Pr(&gt;F)
+## chocolate    1 0.0729 0.072887  0.9105 0.3427
+## Residuals   83 6.6440 0.080049               
+## 
+##  Response pricepercent :
+##             Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## chocolate    1 1.7468 1.74680  28.364 8.434e-07 ***
+## Residuals   83 5.1116 0.06158                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response winpercent :
+##             Df  Sum Sq Mean Sq F value   Pr(&gt;F)    
+## chocolate    1  7368.5  7368.5  56.532 5.86e-11 ***
+## Residuals   83 10818.5   130.3                     
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>pairwise.t.test(candy$sugarpercent, candy$chocolate, p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  candy$sugarpercent and candy$chocolate 
+## 
+##      FALSE
+## TRUE 0.34 
+## 
+## P value adjustment method: none</code></pre>
+<p><em>The assumptions for the MANOVA test are: random samples and independent observations, multivariate normality, homogeneity within groups, no extreme outliers, and no multicollinearity. These are a lot of assumptions that need to be met, which makes the MANOVA hard to test and meet the assumptions. Similarly, the assumptions for the ANOVA test is that this is a random sample and independent observations, there are independent sample groups, it is normally distributed, and there is equal variance. These assumptions are a lot more feasible to test and meet.</em></p>
+</div>
+<div id="randomization-test" class="section level3">
+<h3>Randomization Test</h3>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  sugarpercent by fruity
+## t = 0.30945, df = 74.609, p-value = 0.7578
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  -0.1057483  0.1446397
+## sample estimates:
+## mean in group FALSE  mean in group TRUE 
+##           0.4873404           0.4678947</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-2-1.png" width="672" />
+<em>Null hypothesis: Sugar percent is related to a candy being fruity. Alternative hypothesis: Sugar percent is not related to a candy being fruity (i.e. another type of candy). I am looking for the mean difference in sugar percentage between a candy that’s fruity and one that isn’t. First, I put the sugarpercent in random order, then I recalculated the test statistic. This was repeated 5000 times. I then used the t.test function to find the mean in each group (fruity TRUE and FALSE) to compare. After conducting this test, I reject the null hypothesis due to the fact that the p-value is 0.7578, MUCH greater than 0.05. </em></p>
+</div>
+<div id="linear-regression-model" class="section level3">
+<h3>Linear Regression Model</h3>
+<pre class="r"><code>sugar_c &lt;- candy$sugarpercent - mean(candy$sugarpercent)
+price_c &lt;- candy$pricepercent - mean(candy$pricepercent)
+#LM 1
+candylm &lt;- lm(chocolate~sugar_c, data=candy)
+summary(candylm)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = chocolate ~ sugar_c, data = candy)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -0.5246 -0.4328 -0.3600  0.5417  0.6464 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.43529    0.05412   8.042 5.36e-12 ***
+## sugar_c      0.18372    0.19254   0.954    0.343    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.499 on 83 degrees of freedom
+## Multiple R-squared:  0.01085,    Adjusted R-squared:  -0.001066 
+## F-statistic: 0.9105 on 1 and 83 DF,  p-value: 0.3427</code></pre>
+<pre class="r"><code>#LM 2
+candylm2 &lt;- lm(chocolate~price_c, data=candy)
+summary(candylm2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = chocolate ~ price_c, data = candy)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -0.8820 -0.3085 -0.1139  0.4043  0.9680 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.43529    0.04698   9.265 1.92e-14 ***
+## price_c      0.88087    0.16540   5.326 8.43e-07 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.4332 on 83 degrees of freedom
+## Multiple R-squared:  0.2547, Adjusted R-squared:  0.2457 
+## F-statistic: 28.36 on 1 and 83 DF,  p-value: 8.434e-07</code></pre>
+<pre class="r"><code>#LM 3
+candylm3 &lt;- lm(chocolate~sugar_c*price_c, data=candy)
+summary(candylm3)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = chocolate ~ sugar_c * price_c, data = candy)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.95786 -0.29118 -0.05825  0.38284  0.88732 
+## 
+## Coefficients:
+##                 Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)      0.41548    0.05003   8.305 1.88e-12 ***
+## sugar_c         -0.07806    0.18141  -0.430    0.668    
+## price_c          0.94247    0.17634   5.345 8.15e-07 ***
+## sugar_c:price_c  0.75243    0.64784   1.161    0.249    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.4336 on 81 degrees of freedom
+## Multiple R-squared:  0.2712, Adjusted R-squared:  0.2442 
+## F-statistic: 10.05 on 3 and 81 DF,  p-value: 1.063e-05</code></pre>
+<p><em>LM 1: Predicting that the candy contains chocolate based on sugar percentile (mean centered) returned coefficient estimates of 0.43529 for the intercept and 0.18372 for the sugar_c (centered sugar percentile).
+LM 2: Predicting that the candy contains chocolate based on price percentile (mean centered) returned coefficient estimates of 0.43529 for the intercept and 0.88087 for the price_c (centered price percentile).
+LM 3: Predicting that the candy contains chocolate based on the interaction between sugar and price percentile returned the coefficient estimates of 0.41548 for the intercept, -0.07806 for the sugar_c, 0.94247 for the price_c, and 0.75243 for the interaction between the two variables.</em></p>
+</div>
+<div id="linear-regression-model-plot" class="section level3">
+<h3>Linear Regression Model: Plot</h3>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ tibble  2.1.3     ✔ purrr   0.3.2
+## ✔ tidyr   1.0.0     ✔ dplyr   0.8.3
+## ✔ readr   1.3.1     ✔ stringr 1.4.0
+## ✔ tibble  2.1.3     ✔ forcats 0.4.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>candy %&gt;% ggplot(aes(sugar_c, price_c))+geom_point()+geom_smooth(method=&#39;lm&#39;, se=F)</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>#LM 1
+resids &lt;- candylm$residuals
+fitvals &lt;- candylm$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color = &#39;red&#39;)</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_histogram(aes(resids), bins=20)</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-4-3.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_qq(aes(sample=resids))+geom_qq_line()</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-4-4.png" width="672" /></p>
+<pre class="r"><code>#LM 2
+resids2 &lt;- candylm2$residuals
+fitvals2 &lt;- candylm2$fitted.values
+ggplot()+geom_point(aes(fitvals2,resids2))+geom_hline(yintercept = 0, color=&#39;red&#39;)</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-4-5.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_histogram(aes(resids), bins=20)</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-4-6.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_qq(aes(sample=resids))+geom_qq_line()</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-4-7.png" width="672" /></p>
+<pre class="r"><code>#LM 3
+resids3 &lt;- candylm3$residuals
+fitvals3 &lt;- candylm3$fitted.values
+ggplot()+geom_point(aes(fitvals3,resids3))+geom_hline(yintercept = 0, color=&#39;red&#39;)</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-4-8.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_histogram(aes(resids3), bins=20)</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-4-9.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_qq(aes(sample=resids3))+geom_qq_line()</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-4-10.png" width="672" />
+<em>It can be seen that LM 1 does NOT meet the assumptions of linearity and homoskedasticity. This model also does NOT meet the normality assumption. However, this was expected, as the p-value for LM 1 was not significant. Therefore, we know that sugar percentile is not a valid way of predicting that a candy has chocolate. LM 2 shows a much better closeness of fit to meeting the linearity and homoskedasticity assumptions, but it is still fairly far off. This model also does not meet the normality assumption. Finally, LM 3 shows the best fit for the linear regression out of the three models in meeting the linearity and homoskedasticity assumptions. It also looks good as far as meeting the normality assumption.</em></p>
+</div>
+<div id="linear-regression-model-robust-standard-errors" class="section level3">
+<h3>Linear Regression Model: Robust Standard Errors</h3>
+<pre class="r"><code>#LM 1
+library(lmtest)</code></pre>
+<pre><code>## Loading required package: zoo</code></pre>
+<pre><code>## 
+## Attaching package: &#39;zoo&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     as.Date, as.Date.numeric</code></pre>
+<pre class="r"><code>library(sandwich)
+coeftest(candylm, vcov=vcovHC(candylm))[,1:2]</code></pre>
+<pre><code>##              Estimate Std. Error
+## (Intercept) 0.4352941 0.05473382
+## sugar_c     0.1837239 0.18937996</code></pre>
+<pre class="r"><code>#LM 2 
+coeftest(candylm2, vcov=vcovHC(candylm2))[,1:2]</code></pre>
+<pre><code>##              Estimate Std. Error
+## (Intercept) 0.4352941 0.04756687
+## price_c     0.8808744 0.17125102</code></pre>
+<pre class="r"><code>#LM 3
+coeftest(candylm3, vcov=vcovHC(candylm3))[,1:2]</code></pre>
+<pre><code>##                    Estimate Std. Error
+## (Intercept)      0.41548477 0.04904755
+## sugar_c         -0.07806043 0.18672518
+## price_c          0.94247117 0.17406754
+## sugar_c:price_c  0.75243097 0.69591664</code></pre>
+<p><em>There are not any significant changes from before/after the robust standard errors. The estimate values for the variables from the linear regression model and those calculated after the addition of robust SEs did not change.</em></p>
+</div>
+<div id="bootstrapped-standard-errors" class="section level3">
+<h3>Bootstrapped Standard Errors</h3>
+<pre class="r"><code>boot_se &lt;- replicate(5000, {
+  boot_dat &lt;- boot_dat &lt;- candy[sample(nrow(candy), replace=TRUE),]
+  candylm3 &lt;- lm(chocolate~sugar_c*price_c, data=boot_dat)
+  coef(candylm3)
+})
+boot_se%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept)   sugar_c   price_c sugar_c:price_c
+## 1  0.05689275 0.2056675 0.2034698       0.7444285</code></pre>
+<p><em>After computing the bootstrapped standard errors, I did observe changes in the SEs and p-values. In the original interaction model, the estimate for sugar_c was -0.078, price_c was 0.943, and their interaction was 0.752. However, in the bootstrapped SE, the estimates changed: sugar_c was 0.206, price_c was 0.199, and their interaction was 0.742. It is obvious that the individual variables of sugar and price percentile (mean centered) changed drastically, while their interaction stayed fairly similar.</em></p>
+</div>
+<div id="logistic-regression" class="section level3">
+<h3>Logistic Regression</h3>
+<pre class="r"><code>new_candy &lt;- candy %&gt;% transmute(competitorname = competitorname,
+                    chocolate = chocolate, 
+                    fruity = fruity, 
+                    caramel = caramel, 
+                    peanutyalmondy = peanutyalmondy,
+                    nougat = nougat,
+                    crispedricewafer = crispedricewafer,
+                    hard = hard,
+                    bar = bar,
+                    pluribus = pluribus,
+                    sugarpercent = sugarpercent,
+                    pricepercent = pricepercent,
+                    winpercent = winpercent,
+                    outcome = chocolate,
+                    choc=as.numeric(chocolate == &quot;TRUE&quot;))
+
+odds &lt;- function(p)p/(1-p)
+p &lt;- seq(0,1, by=.1)
+cbind(p, odds=odds(p))%&gt;%round(4)</code></pre>
+<pre><code>##         p   odds
+##  [1,] 0.0 0.0000
+##  [2,] 0.1 0.1111
+##  [3,] 0.2 0.2500
+##  [4,] 0.3 0.4286
+##  [5,] 0.4 0.6667
+##  [6,] 0.5 1.0000
+##  [7,] 0.6 1.5000
+##  [8,] 0.7 2.3333
+##  [9,] 0.8 4.0000
+## [10,] 0.9 9.0000
+## [11,] 1.0    Inf</code></pre>
+<pre class="r"><code>logit &lt;- function(p)log(odds(p))
+cbind(p, odds=odds(p), logit=logit(p))%&gt;%round(4)</code></pre>
+<pre><code>##         p   odds   logit
+##  [1,] 0.0 0.0000    -Inf
+##  [2,] 0.1 0.1111 -2.1972
+##  [3,] 0.2 0.2500 -1.3863
+##  [4,] 0.3 0.4286 -0.8473
+##  [5,] 0.4 0.6667 -0.4055
+##  [6,] 0.5 1.0000  0.0000
+##  [7,] 0.6 1.5000  0.4055
+##  [8,] 0.7 2.3333  0.8473
+##  [9,] 0.8 4.0000  1.3863
+## [10,] 0.9 9.0000  2.1972
+## [11,] 1.0    Inf     Inf</code></pre>
+<pre class="r"><code>#Log 1
+candylog &lt;- glm(choc~sugarpercent, data=new_candy, family=binomial(link=&quot;logit&quot;))
+coeftest(candylog)</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##              Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept)  -0.62287    0.44054 -1.4139   0.1574
+## sugarpercent  0.75164    0.78536  0.9571   0.3385</code></pre>
+<pre class="r"><code>exp(coef(candylog))</code></pre>
+<pre><code>##  (Intercept) sugarpercent 
+##    0.5364045    2.1204824</code></pre>
+<pre class="r"><code>#Log 2
+candylog2 &lt;- glm(choc~pricepercent, data=new_candy, family=binomial(link=&quot;logit&quot;))
+coeftest(candylog2)</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##              Estimate Std. Error z value  Pr(&gt;|z|)    
+## (Intercept)   -2.3558     0.5698 -4.1343 3.560e-05 ***
+## pricepercent   4.3104     1.0241  4.2089 2.566e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>exp(coef(candylog2))</code></pre>
+<pre><code>##  (Intercept) pricepercent 
+##   0.09482115  74.47245751</code></pre>
+<pre class="r"><code>#Accuracy, Sensitivity, Specificity, and Recall
+
+predictlog1 &lt;- predict(candylog, data = new_candy, type = &quot;response&quot;)
+table(prediction=predictlog1&gt;0.5, truth = new_candy$choc)%&gt;%addmargins</code></pre>
+<pre><code>##           truth
+## prediction  0  1 Sum
+##      FALSE 39 33  72
+##      TRUE   9  4  13
+##      Sum   48 37  85</code></pre>
+<pre class="r"><code>#Accuracy
+(39+4)/85</code></pre>
+<pre><code>## [1] 0.5058824</code></pre>
+<pre class="r"><code>#Sensitivity (TPR)
+4/37</code></pre>
+<pre><code>## [1] 0.1081081</code></pre>
+<pre class="r"><code>#Specificity (TNR)
+39/48</code></pre>
+<pre><code>## [1] 0.8125</code></pre>
+<pre class="r"><code>#Recall 
+
+predictlog2 &lt;- predict(candylog2, data = new_candy, type = &quot;response&quot;)
+table(prediction=predictlog2&gt;0.5, truth = new_candy$choc)%&gt;%addmargins</code></pre>
+<pre><code>##           truth
+## prediction  0  1 Sum
+##      FALSE 42 13  55
+##      TRUE   6 24  30
+##      Sum   48 37  85</code></pre>
+<pre class="r"><code>#Accuracy 
+(42+24)/85</code></pre>
+<pre><code>## [1] 0.7764706</code></pre>
+<pre class="r"><code>#Sensitivity (TPR)
+24/37</code></pre>
+<pre><code>## [1] 0.6486486</code></pre>
+<pre class="r"><code>#Specificity (TNR)
+42/48</code></pre>
+<pre><code>## [1] 0.875</code></pre>
+<pre class="r"><code>#Recall </code></pre>
+<p><em>The coefficient estimate for sugarpercent is 2.12, meaning that for each 1 unit increase in sugarpercent, the odds of the candy having chocolate increases by a factor of 2.12. The coefficient estimate for pricepercent is 74.47, meaning that for each 1 unit increase in pricepercent, the odds of the candy having chaocolate increases by a factor of 74.47.</em></p>
+</div>
+<div id="roc-curves" class="section level3">
+<h3>ROC Curves</h3>
+<pre class="r"><code>library(plotROC)
+library(ggplot2)
+ROC1 &lt;- ggplot(new_candy)+geom_roc(aes(d=choc,m=sugarpercent), n.cuts=0)
+ROC1</code></pre>
+<p><img src="/Project2_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<pre class="r"><code>calc_auc(ROC1)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.5630631</code></pre>
+<p><em>Due to the fact that the AUC score is given in values from 0 to 1, the AUC score in this case of 0.56 (close to 0.5) is considered to be a bad predictor for this data. It is desired to have an AUC value close to 0.90, which is very far off from the calculated value.</em></p>
+</div>
+<div id="lasso-regression" class="section level3">
+<h3>LASSO Regression</h3>
+<pre class="r"><code>library(glmnet)</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## 
+## Attaching package: &#39;Matrix&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:tidyr&#39;:
+## 
+##     expand, pack, unpack</code></pre>
+<pre><code>## Loaded glmnet 3.0-1</code></pre>
+<pre class="r"><code>set.seed(1234)
+new_candy2 &lt;- new_candy%&gt;%mutate(Win = ifelse(winpercent &gt;50, 1,0))
+candy_l &lt;- glm(Win~., data = new_candy2, family = &quot;binomial&quot;)
+candy_l</code></pre>
+<pre><code>## 
+## Call:  glm(formula = Win ~ ., family = &quot;binomial&quot;, data = new_candy2)
+## 
+## Coefficients:
+##                               (Intercept)  
+##                                 2.657e+01  
+##                competitorname3 Musketeers  
+##                                 4.829e-06  
+##                   competitornameAir Heads  
+##                                 4.844e-06  
+##                  competitornameAlmond Joy  
+##                                 4.615e-06  
+##                   competitornameBaby Ruth  
+##                                 2.088e-07  
+##          competitornameBoston Baked Beans  
+##                                -5.313e+01  
+##                  competitornameCandy Corn  
+##                                -5.313e+01  
+##          competitornameCaramel Apple Pops  
+##                                -5.313e+01  
+##             competitornameCharleston Chew  
+##                                -5.313e+01  
+##  competitornameChewey Lemonhead Fruit Mix  
+##                                -5.313e+01  
+##                    competitornameChiclets  
+##                                -5.313e+01  
+##                        competitornameDots  
+##                                -5.313e+01  
+##                    competitornameDum Dums  
+##                                -5.313e+01  
+##                 competitornameFruit Chews  
+##                                -5.313e+01  
+##                     competitornameFun Dip  
+##                                -5.313e+01  
+##                  competitornameGobstopper  
+##                                -5.313e+01  
+##           competitornameHaribo Gold Bears  
+##                                 2.086e-07  
+##           competitornameHaribo Happy Cola  
+##                                -5.313e+01  
+##           competitornameHaribo Sour Bears  
+##                                 2.088e-07  
+##          competitornameHaribo Twin Snakes  
+##                                -5.313e+01  
+##            competitornameHershey&#39;s Kisses  
+##                                 1.984e-07  
+##           competitornameHershey&#39;s Krackel  
+##                                 4.633e-06  
+##    competitornameHershey&#39;s Milk Chocolate  
+##                                 1.994e-07  
+##      competitornameHershey&#39;s Special Dark  
+##                                 4.829e-06  
+##                  competitornameJawbusters  
+##                                -5.313e+01  
+##                competitornameJunior Mints  
+##                                 4.613e-06  
+##                     competitornameKit Kat  
+##                                 4.831e-06  
+##                 competitornameLaffy Taffy  
+##                                -5.313e+01  
+##                   competitornameLemonhead  
+##                                -5.313e+01  
+## competitornameLifesavers big ring gummies  
+##                                 2.130e-07  
+##                       competitornameM&amp;M&#39;s  
+##                                 4.824e-06  
+##                  competitornameMike &amp; Ike  
+##                                -5.313e+01  
+##                   competitornameMilk Duds  
+##                                 5.335e-09  
+##                   competitornameMilky Way  
+##                                 4.829e-06  
+##          competitornameMilky Way Midnight  
+##                                 4.639e-06  
+##    competitornameMilky Way Simply Caramel  
+##                                 4.825e-06  
+##                      competitornameMounds  
+##                                -5.313e+01  
+##                 competitornameMr Good Bar  
+##                                 2.057e-07  
+##                       competitornameNerds  
+##                                 4.823e-06  
+##         competitornameNestle Butterfinger  
+##                                 2.080e-07  
+##               competitornameNestle Crunch  
+##                                 4.622e-06  
+##             competitornameNestle Smarties  
+##                                -5.313e+01  
+##                   competitornameNik L Nip  
+##                                -5.313e+01  
+##                 competitornameNow &amp; Later  
+##                                -5.313e+01  
+##                    competitornameOne dime  
+##                                -5.313e+01  
+##                 competitornameOne quarter  
+##                                -5.313e+01  
+##                      competitornamePayday  
+##                                -5.313e+01  
+##         competitornamePeanut butter M&amp;M&#39;s  
+##                                 2.081e-07  
+##                 competitornamePeanut M&amp;Ms  
+##                                 4.831e-06  
+##                competitornamePixie Sticks  
+##                                -5.313e+01  
+##                   competitornamePop Rocks  
+##                                -5.313e+01  
+##                   competitornameRed vines  
+##                                -5.313e+01  
+##          competitornameReese&#39;s Miniatures  
+##                                 4.824e-06  
+##   competitornameReese&#39;s Peanut Butter cup  
+##                                 4.622e-06  
+##              competitornameReese&#39;s pieces  
+##                                 4.625e-06  
+## competitornameReese&#39;s stuffed with pieces  
+##                                 1.994e-07  
+##                    competitornameRing pop  
+##                                -5.313e+01  
+##                        competitornameRolo  
+##                                 4.622e-06  
+##           competitornameRoot Beer Barrels  
+##                                -5.313e+01  
+##                       competitornameRunts  
+##                                -5.313e+01  
+##                     competitornameSixlets  
+##                                -5.313e+01  
+##           competitornameSkittles original  
+##                                 2.004e-07  
+##          competitornameSkittles wildberry  
+##                                 4.637e-06  
+##              competitornameSmarties candy  
+##                                -5.313e+01  
+##                    competitornameSnickers  
+##                                 4.829e-06  
+##            competitornameSnickers Crisper  
+##                                 4.616e-06  
+##             competitornameSour Patch Kids  
+##                                 2.070e-07  
+##       competitornameSour Patch Tricksters  
+##                                 4.618e-06  
+##                   competitornameStarburst  
+##                                 2.126e-07  
+##         competitornameStrawberry bon bons  
+##                                -5.313e+01  
+##                competitornameSugar Babies  
+##                                -5.313e+01  
+##                 competitornameSugar Daddy  
+##                                -5.313e+01  
+##                competitornameSuper Bubble  
+##                                -5.313e+01  
+##                competitornameSwedish Fish  
+##                                 2.103e-07  
+##                 competitornameTootsie Pop  
+##                                -5.313e+01  
+##        competitornameTootsie Roll Juniors  
+##                                -5.313e+01  
+##        competitornameTootsie Roll Midgies  
+##                                -5.313e+01  
+##     competitornameTootsie Roll Snack Bars  
+##                                -5.313e+01  
+##           competitornameTrolli Sour Bites  
+##                                -5.313e+01  
+##                        competitornameTwix  
+##                                 2.036e-07  
+##                   competitornameTwizzlers  
+##                                -5.313e+01  
+##                    competitornameWarheads  
+##                                -5.313e+01  
+##        competitornameWelch&#39;s Fruit Snacks  
+##                                -5.313e+01  
+##  competitornameWerther&#39;s Original Caramel  
+##                                -5.313e+01  
+##                    competitornameWhoppers  
+##                                -5.313e+01  
+##                             chocolateTRUE  
+##                                        NA  
+##                                fruityTRUE  
+##                                        NA  
+##                               caramelTRUE  
+##                                        NA  
+##                        peanutyalmondyTRUE  
+##                                        NA  
+##                                nougatTRUE  
+##                                        NA  
+##                      crispedricewaferTRUE  
+##                                        NA  
+##                                  hardTRUE  
+##                                        NA  
+##                                   barTRUE  
+##                                        NA  
+##                              pluribusTRUE  
+##                                        NA  
+##                              sugarpercent  
+##                                        NA  
+##                              pricepercent  
+##                                        NA  
+##                                winpercent  
+##                                        NA  
+##                               outcomeTRUE  
+##                                        NA  
+##                                      choc  
+##                                        NA  
+## 
+## Degrees of Freedom: 84 Total (i.e. Null);  0 Residual
+## Null Deviance:       117.3 
+## Residual Deviance: 4.931e-10     AIC: 170</code></pre>
+<pre class="r"><code>x &lt;- model.matrix(candy_l)
+y &lt;- as.matrix(new_candy2$Win)
+cv.lasso &lt;- cv.glmnet(x, y, family = &quot;binomial&quot;)
+lasso &lt;- glmnet(x, y, family = &quot;binomial&quot;, alpha=1, lambda=cv.lasso$lambda.1se)
+coef(lasso)</code></pre>
+<pre><code>## 100 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                                                     s0
+## (Intercept)                               -21.54089177
+## (Intercept)                                 .         
+## competitorname3 Musketeers                  .         
+## competitornameAir Heads                     1.65001463
+## competitornameAlmond Joy                    2.49274571
+## competitornameBaby Ruth                     .         
+## competitornameBoston Baked Beans            .         
+## competitornameCandy Corn                    .         
+## competitornameCaramel Apple Pops            .         
+## competitornameCharleston Chew               .         
+## competitornameChewey Lemonhead Fruit Mix    .         
+## competitornameChiclets                      .         
+## competitornameDots                          .         
+## competitornameDum Dums                      .         
+## competitornameFruit Chews                   .         
+## competitornameFun Dip                       .         
+## competitornameGobstopper                   -0.47028628
+## competitornameHaribo Gold Bears             .         
+## competitornameHaribo Happy Cola             .         
+## competitornameHaribo Sour Bears             2.04265087
+## competitornameHaribo Twin Snakes            .         
+## competitornameHershey&#39;s Kisses              0.36764759
+## competitornameHershey&#39;s Krackel             .         
+## competitornameHershey&#39;s Milk Chocolate      .         
+## competitornameHershey&#39;s Special Dark        .         
+## competitornameJawbusters                    .         
+## competitornameJunior Mints                  .         
+## competitornameKit Kat                       .         
+## competitornameLaffy Taffy                   .         
+## competitornameLemonhead                     .         
+## competitornameLifesavers big ring gummies   1.40908612
+## competitornameM&amp;M&#39;s                         .         
+## competitornameMike &amp; Ike                   -0.31325063
+## competitornameMilk Duds                     0.49922808
+## competitornameMilky Way                     .         
+## competitornameMilky Way Midnight            .         
+## competitornameMilky Way Simply Caramel      .         
+## competitornameMounds                       -0.91260904
+## competitornameMr Good Bar                   0.72643929
+## competitornameNerds                         0.37664164
+## competitornameNestle Butterfinger           .         
+## competitornameNestle Crunch                 .         
+## competitornameNestle Smarties               .         
+## competitornameNik L Nip                     .         
+## competitornameNow &amp; Later                   .         
+## competitornameOne dime                      .         
+## competitornameOne quarter                  -0.18852196
+## competitornamePayday                       -0.26464445
+## competitornamePeanut butter M&amp;M&#39;s           .         
+## competitornamePeanut M&amp;Ms                   .         
+## competitornamePixie Sticks                  .         
+## competitornamePop Rocks                     .         
+## competitornameRed vines                     .         
+## competitornameReese&#39;s Miniatures            .         
+## competitornameReese&#39;s Peanut Butter cup     .         
+## competitornameReese&#39;s pieces                .         
+## competitornameReese&#39;s stuffed with pieces   .         
+## competitornameRing pop                      .         
+## competitornameRolo                          .         
+## competitornameRoot Beer Barrels             .         
+## competitornameRunts                         .         
+## competitornameSixlets                       .         
+## competitornameSkittles original             .         
+## competitornameSkittles wildberry            0.48243232
+## competitornameSmarties candy               -0.13753804
+## competitornameSnickers                      .         
+## competitornameSnickers Crisper              .         
+## competitornameSour Patch Kids               .         
+## competitornameSour Patch Tricksters         1.44511978
+## competitornameStarburst                     .         
+## competitornameStrawberry bon bons           .         
+## competitornameSugar Babies                  .         
+## competitornameSugar Daddy                   .         
+## competitornameSuper Bubble                  .         
+## competitornameSwedish Fish                  0.58493767
+## competitornameTootsie Pop                  -1.39995952
+## competitornameTootsie Roll Juniors          .         
+## competitornameTootsie Roll Midgies         -0.02806721
+## competitornameTootsie Roll Snack Bars      -1.68351041
+## competitornameTrolli Sour Bites            -0.63521576
+## competitornameTwix                          .         
+## competitornameTwizzlers                     .         
+## competitornameWarheads                      .         
+## competitornameWelch&#39;s Fruit Snacks          .         
+## competitornameWerther&#39;s Original Caramel    .         
+## competitornameWhoppers                     -1.62883557
+## chocolateTRUE                               .         
+## fruityTRUE                                  .         
+## caramelTRUE                                 .         
+## peanutyalmondyTRUE                          .         
+## nougatTRUE                                  .         
+## crispedricewaferTRUE                        .         
+## hardTRUE                                    .         
+## barTRUE                                     .         
+## pluribusTRUE                                .         
+## sugarpercent                                .         
+## pricepercent                                .         
+## winpercent                                  0.42272538
+## outcomeTRUE                                 .         
+## choc                                        .</code></pre>
+<p><em>When I set the winpercent to values greater than 50% (popular candies with an overall “win” higher than 50% of people surveyed), the variables retained were: Air Heads, Almond Joys, Haribo Sour Bears, Hershey’s Kisses, Lifesavers, Milk Duds, Mr. Goodbar, Nerds, Skittles Wild Berry, Sour Patch Tricksters, and Swedish Fish. A lot of popular candies!</em></p>
+</div>
+<div id="fold-cv" class="section level3">
+<h3>10-fold CV</h3>
+<pre class="r"><code>library(glmnet)
+#candyCV&lt;-new_candy%&gt;%filter(new_candy, competitorname %in% c(&quot;Air Heads&quot;, &quot;Almond Joy&quot;, &quot;Haribo Sour Bears&quot;, &quot;Hershey&#39;s Kisses&quot;, &quot;Lifesavers big ring gummies&quot;, &quot;Milk Duds&quot;, &quot;Mr Good Bar&quot;, &quot;Nerds&quot;, &quot;Skittles wildberry&quot;, &quot;Sour Patch Tricksters&quot;, &quot;Swedish Fish&quot;))
+set.seed(1234)
+k=10
+#candyCVsamp&lt;-candyCV[sample(nrow(candyCV)),]
+#folds&lt;-cut(seq(1:nrow(candyCV)), breaks=k, labels=FALSE)
+#diags&lt;-NULL
+#for(i in 1:k){
+  #train2&lt;-candyCVsamp[folds!=i,]
+  #test2&lt;-candyCVsamp[folds==i,]
+  #truth&lt;-test2$Win
+  #fit&lt;-glm(Win~(.)^2, data = train2, family = &quot;binomial&quot;)
+  #probs&lt;-predict(fit,newdata = test2, type=&quot;response&quot;)
+  #diags&lt;-rbind(diags, class_diag(probs, truth))
+#}
+#apply(diags, 2, mean)</code></pre>
+<p><em>I’m not sure why my “candyCV” isn’t working. I tried it multiple times and this was the only thing I had issues with. Unfortunately, I could not get it figured out :(</em></p>
+</div>
+</div>

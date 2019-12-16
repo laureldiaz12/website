@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Laurel Diaz</title>
+    <link>/</link>
+    <description>Recent content on Laurel Diaz</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Sun, 15 Dec 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Python How To </title>
+      <link>/blog/python-how-to/</link>
+      <pubDate>Sun, 15 Dec 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/python-how-to/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Projects</title>
+      <link>/projects/</link>
+      <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
+      
+      <guid>/projects/</guid>
+      <description>Projects Here are some projects I have completed:
+  Project 1: Data Wrangling and Exploratory Analysis
+  Project 2: Modeling, Inference, Prediction
+  </description>
+    </item>
+    
+    <item>
+      <title>Project 1 - Laurel Diaz</title>
+      <link>/project1/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project1/</guid>
+      <description>Project 1: Analyzing Gender Representation in Marvel Comics The two datasets I have chosen to examine are “avengers” and “comic_characters_marvel”. The “avengers” dataset has 173 unique rows (characters) and 21 variables. However, after tidying my data, I chose to keep the ‘name’, ‘appearances’, ‘current’, ‘gender’, ‘year’, ‘years_since_joining’, and ‘honorary’ columns, since these would be the easiest to join with the “comic_characters_marvel” dataset. The “comic_characters_marvel” dataset has 16,376 unique rows (characters) and 15 variables.</description>
+    </item>
+    
+    <item>
+      <title>Project 2 - Laurel Diaz (lcd738)</title>
+      <link>/project2/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project2/</guid>
+      <description>Candy Rankings Dataset This project uses the “candy_rankings” dataset in the package “fivethirtyeight” to understand statistical relationships between types of candy, sugar percentile, price percentile, pluribus (one of many candies in a box) and overall “win” percentage. As an emphatic lover of candy, I thought it would be incredibly interesting to see which candy types had the highest and lowest sugar percentages, which had the higher price percentages, and which were the overall winners.</description>
+    </item>
+    
+  </channel>
+</rss>

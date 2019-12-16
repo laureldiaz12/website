@@ -1,0 +1,21 @@
+---
+title: 'Python How To '
+author: Laurel Diaz
+date: '2019-12-15'
+slug: python-how-to
+categories: []
+tags: []
+description: 'A short how-to for the basics of Python'
+---
+First, let's start with the basics of Python. We'll be working with the 'faithful' dataset - it's super easy!
+```{r setup, include = FALSE}
+library(reticulate)
+use_python("/usr/local/bin/python3", required = F)
+
+```
+
+```{python}
+import pandas as pd
+faithful=pd.read_csv("https://vincentarelbundock.github.io/Rdatasets/csv/datasets/faithful.csv")
+
+

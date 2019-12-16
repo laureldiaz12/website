@@ -1,0 +1,218 @@
+---
+title: "Project 2 - Laurel Diaz (lcd738)"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Candy Rankings Dataset
+
+This project uses the "candy_rankings" dataset in the package "fivethirtyeight" to understand statistical relationships between types of candy, sugar percentile, price percentile, pluribus (one of many candies in a box) and overall "win" percentage. As an emphatic lover of candy, I thought it would be incredibly interesting to see which candy types had the highest and lowest sugar percentages, which had the higher price percentages, and which were the overall winners. This project will use the categorical variable of "competitorname" (candy brand name), the binary variables of candy type (i.e., does it have chocolate?: 1=yes, 0=no, is it fruity?: 1=yes, 0=no, etc) and pluribus (1=yes, 0=no), and the numerical variables of sugar percentile, price percentile, and overall win percentage. 
+
+### Part 1: MANOVA and ANOVA
+```{R}
+library(fivethirtyeight)
+candy <- candy_rankings
+man <- manova(cbind(sugarpercent, pricepercent, winpercent) ~chocolate, data=candy)
+summary(man)
+summary.aov(man)
+pairwise.t.test(candy$sugarpercent, candy$chocolate, p.adj="none")
+```
+*The assumptions for the MANOVA test are: random samples and independent observations, multivariate normality, homogeneity within groups, no extreme outliers, and no multicollinearity. These are a lot of assumptions that need to be met, which makes the MANOVA hard to test and meet the assumptions. Similarly, the assumptions for the ANOVA test is that this is a random sample and independent observations, there are independent sample groups, it is normally distributed, and there is equal variance. These assumptions are a lot more feasible to test and meet.*
+
+### Randomization Test
+
+```{r, echo=FALSE}
+library(ggplot2)
+rand_dist <- vector()
+for(i in 1:5000){
+  candydist <- data.frame(sugar=sample(candy$sugarpercent), fruity=candy$fruity)
+  rand_dist[i]<-mean(candydist[candydist$fruity=="TRUE",]$sugar)-
+    mean(candydist[candydist$fruity=="FALSE",]$sugar)
+}
+t.test(data=candy, sugarpercent~fruity)
+
+ggplot(candy,aes(sugarpercent,fill=fruity))+geom_histogram(bins=6.5)+facet_wrap(~fruity,ncol=2)
+```
+*Null hypothesis: Sugar percent is related to a candy being fruity. Alternative hypothesis: Sugar percent is not related to a candy being fruity (i.e. another type of candy). I am looking for the mean difference in sugar percentage between a candy that's fruity and one that isn't. First, I put the sugarpercent in random order, then I recalculated the test statistic. This was repeated 5000 times. I then used the t.test function to find the mean in each group (fruity TRUE and FALSE) to compare. After conducting this test, I reject the null hypothesis due to the fact that the p-value is 0.7578, MUCH greater than 0.05. *
+
+### Linear Regression Model 
+
+```{R}
+sugar_c <- candy$sugarpercent - mean(candy$sugarpercent)
+price_c <- candy$pricepercent - mean(candy$pricepercent)
+#LM 1
+candylm <- lm(chocolate~sugar_c, data=candy)
+summary(candylm)
+#LM 2
+candylm2 <- lm(chocolate~price_c, data=candy)
+summary(candylm2)
+#LM 3
+candylm3 <- lm(chocolate~sugar_c*price_c, data=candy)
+summary(candylm3)
+```
+*LM 1: Predicting that the candy contains chocolate based on sugar percentile (mean centered) returned coefficient estimates of 0.43529 for the intercept and 0.18372 for the sugar_c (centered sugar percentile).
+LM 2: Predicting that the candy contains chocolate based on price percentile (mean centered) returned coefficient estimates of 0.43529 for the intercept and 0.88087 for the price_c (centered price percentile).
+LM 3: Predicting that the candy contains chocolate based on the interaction between sugar and price percentile returned the coefficient estimates of 0.41548 for the intercept, -0.07806 for the sugar_c, 0.94247 for the price_c, and 0.75243 for the interaction between the two variables.* 
+
+### Linear Regression Model: Plot
+```{R}
+library(tidyverse)
+candy %>% ggplot(aes(sugar_c, price_c))+geom_point()+geom_smooth(method='lm', se=F)
+#LM 1
+resids <- candylm$residuals
+fitvals <- candylm$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color = 'red')
+ggplot()+geom_histogram(aes(resids), bins=20)
+ggplot()+geom_qq(aes(sample=resids))+geom_qq_line()
+#LM 2
+resids2 <- candylm2$residuals
+fitvals2 <- candylm2$fitted.values
+ggplot()+geom_point(aes(fitvals2,resids2))+geom_hline(yintercept = 0, color='red')
+ggplot()+geom_histogram(aes(resids), bins=20)
+ggplot()+geom_qq(aes(sample=resids))+geom_qq_line()
+#LM 3
+resids3 <- candylm3$residuals
+fitvals3 <- candylm3$fitted.values
+ggplot()+geom_point(aes(fitvals3,resids3))+geom_hline(yintercept = 0, color='red')
+ggplot()+geom_histogram(aes(resids3), bins=20)
+ggplot()+geom_qq(aes(sample=resids3))+geom_qq_line()
+```
+*It can be seen that LM 1 does NOT meet the assumptions of linearity and homoskedasticity. This model also does NOT meet the normality assumption. However, this was expected, as the p-value for LM 1 was not significant. Therefore, we know that sugar percentile is not a valid way of predicting that a candy has chocolate. LM 2 shows a much better closeness of fit to meeting the linearity and homoskedasticity assumptions, but it is still fairly far off. This model also does not meet the normality assumption. Finally, LM 3 shows the best fit for the linear regression out of the three models in meeting the linearity and homoskedasticity assumptions. It also looks good as far as meeting the normality assumption.*  
+
+### Linear Regression Model: Robust Standard Errors
+```{R}
+#LM 1
+library(lmtest)
+library(sandwich)
+coeftest(candylm, vcov=vcovHC(candylm))[,1:2]
+#LM 2 
+coeftest(candylm2, vcov=vcovHC(candylm2))[,1:2]
+#LM 3
+coeftest(candylm3, vcov=vcovHC(candylm3))[,1:2]
+```
+*There are not any significant changes from before/after the robust standard errors. The estimate values for the variables from the linear regression model and those calculated after the addition of robust SEs did not change.*
+
+### Bootstrapped Standard Errors
+```{R}
+boot_se <- replicate(5000, {
+  boot_dat <- boot_dat <- candy[sample(nrow(candy), replace=TRUE),]
+  candylm3 <- lm(chocolate~sugar_c*price_c, data=boot_dat)
+  coef(candylm3)
+})
+boot_se%>%t%>%as.data.frame%>%summarize_all(sd)
+```
+*After computing the bootstrapped standard errors, I did observe changes in the SEs and p-values. In the original interaction model, the estimate for sugar_c was -0.078, price_c was 0.943, and their interaction was 0.752. However, in the bootstrapped SE, the estimates changed: sugar_c was 0.206, price_c was 0.199, and their interaction was 0.742. It is obvious that the individual variables of sugar and price percentile (mean centered) changed drastically, while their interaction stayed fairly similar.*
+
+### Logistic Regression 
+```{R}
+new_candy <- candy %>% transmute(competitorname = competitorname,
+                    chocolate = chocolate, 
+                    fruity = fruity, 
+                    caramel = caramel, 
+                    peanutyalmondy = peanutyalmondy,
+                    nougat = nougat,
+                    crispedricewafer = crispedricewafer,
+                    hard = hard,
+                    bar = bar,
+                    pluribus = pluribus,
+                    sugarpercent = sugarpercent,
+                    pricepercent = pricepercent,
+                    winpercent = winpercent,
+                    outcome = chocolate,
+                    choc=as.numeric(chocolate == "TRUE"))
+
+odds <- function(p)p/(1-p)
+p <- seq(0,1, by=.1)
+cbind(p, odds=odds(p))%>%round(4)
+logit <- function(p)log(odds(p))
+cbind(p, odds=odds(p), logit=logit(p))%>%round(4)
+
+#Log 1
+candylog <- glm(choc~sugarpercent, data=new_candy, family=binomial(link="logit"))
+coeftest(candylog)
+exp(coef(candylog))
+#Log 2
+candylog2 <- glm(choc~pricepercent, data=new_candy, family=binomial(link="logit"))
+coeftest(candylog2)
+exp(coef(candylog2))
+
+#Accuracy, Sensitivity, Specificity, and Recall
+
+predictlog1 <- predict(candylog, data = new_candy, type = "response")
+table(prediction=predictlog1>0.5, truth = new_candy$choc)%>%addmargins
+#Accuracy
+(39+4)/85
+#Sensitivity (TPR)
+4/37
+#Specificity (TNR)
+39/48
+#Recall 
+
+predictlog2 <- predict(candylog2, data = new_candy, type = "response")
+table(prediction=predictlog2>0.5, truth = new_candy$choc)%>%addmargins
+#Accuracy 
+(42+24)/85
+#Sensitivity (TPR)
+24/37
+#Specificity (TNR)
+42/48
+#Recall 
+
+```
+*The coefficient estimate for sugarpercent is 2.12, meaning that for each 1 unit increase in sugarpercent, the odds of the candy having chocolate increases by a factor of 2.12. The coefficient estimate for pricepercent is 74.47, meaning that for each 1 unit increase in pricepercent, the odds of the candy having chaocolate increases by a factor of 74.47.*
+
+### ROC Curves
+
+```{R}
+library(plotROC)
+library(ggplot2)
+ROC1 <- ggplot(new_candy)+geom_roc(aes(d=choc,m=sugarpercent), n.cuts=0)
+ROC1
+calc_auc(ROC1)
+```
+*Due to the fact that the AUC score is given in values from 0 to 1, the AUC score in this case of 0.56 (close to 0.5) is considered to be a bad predictor for this data. It is desired to have an AUC value close to 0.90, which is very far off from the calculated value.*
+
+### LASSO Regression 
+
+```{R}
+library(glmnet)
+set.seed(1234)
+new_candy2 <- new_candy%>%mutate(Win = ifelse(winpercent >50, 1,0))
+candy_l <- glm(Win~., data = new_candy2, family = "binomial")
+candy_l
+x <- model.matrix(candy_l)
+y <- as.matrix(new_candy2$Win)
+cv.lasso <- cv.glmnet(x, y, family = "binomial")
+lasso <- glmnet(x, y, family = "binomial", alpha=1, lambda=cv.lasso$lambda.1se)
+coef(lasso)
+```
+
+*When I set the winpercent to values greater than 50% (popular candies with an overall "win" higher than 50% of people surveyed), the variables retained were: Air Heads, Almond Joys, Haribo Sour Bears, Hershey's Kisses, Lifesavers, Milk Duds, Mr. Goodbar, Nerds, Skittles Wild Berry, Sour Patch Tricksters, and Swedish Fish. A lot of popular candies!*
+
+### 10-fold CV 
+```{r}
+library(glmnet)
+#candyCV<-new_candy%>%filter(new_candy, competitorname %in% c("Air Heads", "Almond Joy", "Haribo Sour Bears", "Hershey's Kisses", "Lifesavers big ring gummies", "Milk Duds", "Mr Good Bar", "Nerds", "Skittles wildberry", "Sour Patch Tricksters", "Swedish Fish"))
+set.seed(1234)
+k=10
+#candyCVsamp<-candyCV[sample(nrow(candyCV)),]
+#folds<-cut(seq(1:nrow(candyCV)), breaks=k, labels=FALSE)
+#diags<-NULL
+#for(i in 1:k){
+  #train2<-candyCVsamp[folds!=i,]
+  #test2<-candyCVsamp[folds==i,]
+  #truth<-test2$Win
+  #fit<-glm(Win~(.)^2, data = train2, family = "binomial")
+  #probs<-predict(fit,newdata = test2, type="response")
+  #diags<-rbind(diags, class_diag(probs, truth))
+#}
+#apply(diags, 2, mean)
+```
+*I'm not sure why my "candyCV" isn't working. I tried it multiple times and this was the only thing I had issues with. Unfortunately, I could not get it figured out :(*
+
+
+
+

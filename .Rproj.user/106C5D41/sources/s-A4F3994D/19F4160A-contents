@@ -1,0 +1,222 @@
+---
+title: "HW 8"
+author: "SDS348 Fall 2019"
+date: ""
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.align="center", fig.height=5, message=FALSE, warning=FALSE, fig.width=8, tidy.opts=list(width.cutoff=60),tidy=TRUE)
+```
+
+## Laurel Diaz lcd738
+
+**This homework is due on Nov 10, 2019 at 11:59pm. Please submit as a pdf file on Canvas.**
+
+*For all questions, include the R commands/functions that you used to find your answer. Answers without supporting code will not receive credit.*
+
+> ### How to submit this assignment
+> All homework assignments will be completed using R Markdown. These `.Rmd` files consist of text/syntax (formatted using Markdown) alongside embedded R code. 
+> When you have completed the assignment (by adding R code inside codeblocks and supporting text outside of the codeblocks), create your document as follows:
+
+> - Click the "Knit" button (above) to create an .html file
+> - Open the html file in your internet browser to view
+> - Go to `File > Print` and print your .html file to a .pdf
+> - (or knit to PDF)
+> - Upload the .pdf file to Canvas
+
+
+---
+
+### Question 1 
+
+We will analyze some data from a famous case of alleged gender discrimination in admission to graduate programs at UC Berkeley in 1973. The three variables are `Admit` (Admitted, Rejected), `Gender` (Male, Female), and `Dept` (Departments A, B, C, D, E, F). First, create a dichotomous outcome variable $y$ that is 1 if Admit=="Admitted", 0 otherwise.
+
+1a. (2 pts) Predict $y$ from Gender using a logistic regression. Is the effect significant? Interpret the effect: what is the odds ratio for admission to graduate school for women compared to men? Compute the predicted probability of admission for women and for men.
+
+```{R}
+adm<-read.csv("http://www.nathanielwoodward.com/admissions.csv")
+library(tidyverse)
+library(MASS)
+library(ggplot2)
+library(lmtest)
+head(adm)
+data <- adm %>% transmute(Gender = Gender,
+                          Dept = Dept, 
+                          outcome = Admit,
+                          y=as.numeric(Admit=="Admitted"))
+head(data)
+odds<-function(p)p/(1-p)
+p<-seq(0,1, by=.1)
+cbind(p, odds=odds(p))%>%round(4)
+logit<-function(p)log(odds(p))
+cbind(p, odds=odds(p), logit=logit(p))%>%round(4)
+
+fit<-glm(y~Gender,data=data,family=binomial(link="logit"))
+coeftest(fit)
+exp(coef(fit))
+1/1.841079
+
+predict(fit, newdata=data.frame(Gender="Female"),type="response")
+predict(fit, newdata=data.frame(Gender="Male"),type="response")
+
+```
+*The odds ratio for admission into graduate school for men is 1.841 times that of women. Alternatively, the odds ratio for admission for women is 0.5431597 times that of men. The predicted probability of admission for women is 0.3035, while that for men is slightly higher at 0.4452.*
+
+1b. (2 pts) Now predict $y$ (admission) from Dept using a logistic regression. Interpret the overall pattern of results. For which departments are odds of admission higher than A? Which departments are the most selective? The least?
+
+```{R}
+fit1b<-glm(y~Dept,data=data,family=binomial(link="logit"))
+summary(fit1b)
+coeftest(fit1b)
+exp(coef(fit1b))
+table(data$y, data$Dept)
+#Odds of Admission for A, B, C, D, E, and F respectively
+A <- 601/332
+B <- 370/215
+C <- 322/596
+D <- 269/523
+E <- 147/437
+F <- 46/668
+#Odds Ratios
+B/A
+C/A
+D/A
+E/A
+F/A
+
+```
+
+*From these results, it can be seen that the most selective departments are those with the smallest odds ratios: Dept D, E, and F. Alternatively, the least selective departments are those with the highest odds ratios (higher odds of being admitted): Dept, B and C. In order to find which departments' odds of admission are higher than A, I created a table of values and then calculated each departments' odds. None of the departments have a higher admission rate than A.*
+
+1c. (2 pts) Now rerun the model but add `Dept` (Department of graduate program) as a predictor. Interpret the coefficient for `Gender` now (note there is no interaction, so the effect doesn't depend on the level of `Dept`). Controlling for Department, is there a significant effect of Gender on admissions? What is the odds ratio? What can you say about departments A and B compared to the others (in terms of odds/probability of admission; relevel if need be)?
+
+```{R}
+data$predictor <- data$Dept
+fit1c <- glm(y~predictor, data=data, family="binomial")
+data$prob<-predict(fit1c,type="response")
+summary(fit1c)
+coeftest(fit1c)
+exp(coef(fit1c))
+```
+
+
+1d. (2 pts) OK, now add the interaction of Gender and Department as you predict $y$ (admissions), to get a fuller picture. Compute the odds ratio for admission (Male vs. Female) in each department (A through F). Which departments favor Male applicants (i.e., higher odds of admission for Males)?
+
+```{R}
+fit1d<-glm(y~Gender * Dept,data=data,family=binomial(link="logit"))
+summary(fit1d)
+coeftest(fit1d)
+exp(coef(fit1d))
+```
+
+*The department with the highest odds of admission for males is DeptE.*
+
+1e. (2 pts) Take the admit dataset and, using dplyr functions, create a table with counts of applicants of each Gender in each Department (e.g., number of males who applied to department A) and also the percent of applicants admitted of each Gender in each Department. Sort descending by the count variable. In terms of selectivity, what kinds of departments did the majority of women apply to? What about the majority of men? Skim through the wikipedia article about Simpson's paradox (https://en.wikipedia.org/wiki/Simpsons_paradox) to get a better idea of what is going on here!
+
+```{R}
+num1e <- data %>%
+  count(Gender,outcome,Dept) %>%
+  arrange(desc(n))
+head(num1e)
+num1e <- num1e %>%
+  spread(outcome, n)
+num1e
+num1e2 <- num1e %>%
+  mutate(admrate = Admitted/(Admitted+Rejected))
+num1e2 %>% arrange(desc(admrate))
+```
+
+## Question 2
+
+Load the starswars data (from the dplyr package). Remove all NAs from the variables `mass`, `height`, and `species`.  Create a binary numeric variable $y$: 1 if species is Human, 0 otherwise. Use this modified dataset for the remaining questions.
+
+2a (3 pts) Predict the dichotomous Human indicator (`y`) from `height` using a logistic regression. Briefly interpret. Plot the ROC curve and compute the AUC. Create a plot of the logistic regression showing predicted probability of being Human by height. Color points by predicted human vs predicted not.
+
+```{R}
+library(dplyr)
+library(plotROC)
+starwars <- starwars
+head(starwars)
+mydata <- starwars %>% drop_na("mass", "height", "species")
+mydata %>% transmute(name = name,
+                          height = height, 
+                          mass = mass,
+                          hair_color = hair_color, 
+                          skin_color = skin_color, 
+                          eye_color = eye_color, 
+                          birth_year = birth_year, 
+                          gender = gender, 
+                          homeworld = homeworld, 
+                          species = species, 
+                          films = films, 
+                          vehicles = vehicles, 
+                          starships = starships,
+                          outcome = species,
+                          y=as.numeric(species=="Human"))
+fit2a<-glm(y~height,data=mydata,family=binomial(link="logit"))
+summary(fit2a)
+exp(coef(fit2a))
+ROC2a <- ggplot(mydata)+geom_roc(aes(d=y,m=height),n.cuts=0)
+ROC2a
+calc_auc(ROC2a)
+log_res <- ggplot(mydata, aes(height,y))+geom_point(aes(color=y),alpha=.5,size=3)+
+  geom_rug(aes(color=y),sides="right")+geom_hline(yintercept=.5)
+log_res
+```
+
+*Something in this code isn't letting me knit. However, when I ran just this chunk to see where it was going wrong, nothing happened. All sections were green and nothing was red.*
+
+2b. (2 pts) Predict the Human indicator variable (`y`) from `height` and `mass` (no interaction). Discuss the output briefly (you do not have to interpret any coefficients). Compute Accuracy, Sensitivity, and Specificity. Plot the ROC curve and compute the AUC.
+
+```{R}
+fit2b<-glm(y~height+mass, data=mydata, family="binomial")
+coeftest(fit2b)
+predict <- predict(fit2b, data=mydata, type="response")
+table(truth=mydata$y, prediction=predict>0.5)%>%addmargins
+ROC2b <- ggplot(mydata)+geom_roc(aes(d=y,m=height, mass),n.cuts=0)
+#calc_auc(ROC2b)
+```
+
+
+2c. (3 pts) Predict this variable from the interaction of height and mass. Be sure to center your variables first, and save them to the starwars dataset as `mass_c` and `height_c`. Discuss the output. Compute Accuracy, Sensitivity, and Specificity. Plot the ROC curve and calculate the AUC. Compare the AUC with that of the main-effects model in 2b.
+
+```{R}
+mass_c <- mydata$mass - mean(mydata$mass)
+height_c <- mydata$height - mean(mydata$height)
+fit2c<-glm(y~height_c*mass_c, data=mydata, family="binomial")
+predict2c <- predict(fit2c, data=mydata, type="response")
+table(prediction=predict2c>0.5, truth=mydata$y)%>%addmargins
+ROC2c <- ggplot(mydata)+geom_roc(aes(d=y,m=height_c, mass_c),n.cuts=0)
+#ROC2c
+#calc_auc(ROC2c)
+```
+
+
+2d. (2 pts) We want to visualize the interaction, but it is continuous! We can get around this by setting mass_c to the mean (0) and plus/minus one standard deviation and then looking at the effect of height on the probability of being human. Below, in the code given, I take the starwars dataset and I duplicate it three times: to one, I add a column with `mass_c=0`, to another, I add `mass_c=sd(mass)`, and to the third I add `mass_c=-sd(mass)`. I stack them all on top of each other and add a label (`mass_cat`). Use this new dataset and `predict(..., newdata=starwars_new, type="response")` to get predicted probabilities from your interaction model, and then use ggplot to plot those predicted probabilities against height (use geom_line and set `color=mass_cat`). What do you see?
+
+```{R}
+## Code to get you started on 2d
+starwars_new<-bind_rows(mutate(mydata,mass_c=0),
+                     mutate(mydata,mass_c=sd(mass)),
+                     mutate(mydata,mass_c=-sd(mass)))
+
+starwars_new<-starwars_new%>%
+  mutate(mass_cat=c(rep("mean",nrow(mydata)),
+                    rep("mean+1sd",nrow(mydata)),
+                    rep("mean-1sd",nrow(mydata))))
+#predict(fit2c, newdata=starwars_new, type = "response")
+plot <- ggplot(starwars_new)+geom_line(aes(predict,starwars_new$outcome, color=mass_cat))
+#plot
+```
+
+
+```{R, echo=F}
+## DO NOT DELETE THIS BLOCK!
+sessionInfo()
+Sys.time()
+Sys.info()
+```
